@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#092c3b">
+  <meta name="description" content="A local-first flashcard player for rich, agent-authored card stacks.">
+  <title>goodvibes.flashcards — review one thought at a time</title>
+  <link rel="stylesheet" href="./style.css">
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="./" aria-label="goodvibes.flashcards home">goodvibes<span>.</span>flashcards</a>
+      <div class="topbar-actions">
+        <span class="local-note">Your progress stays in this browser</span>
+        <input id="stack-file" type="file" accept=".json,application/json" hidden>
+        <button class="import-button" id="import-button" type="button">Import stack <span class="import-mark" aria-hidden="true"></span></button>
+      </div>
+    </header>
+
+    <main>
+      <div class="intro">
+        <div>
+          <h1 id="stack-title">Loading your study surface</h1>
+          <p id="stack-description">A prompt, a moment to recall, and an answer.</p>
+        </div>
+        <div class="stack-origin" id="stack-origin">Public demo stack</div>
+      </div>
+
+      <p class="notice" id="notice" role="alert" hidden></p>
+      <div class="workspace" id="workspace">
+        <aside class="queue-panel" aria-label="Session progress">
+          <h2>Review session</h2>
+          <div class="queue-number" id="pending-count">—</div>
+          <p class="queue-label">prompts still to answer</p>
+          <div class="queue-rule" aria-hidden="true"></div>
+          <dl class="session-stats">
+            <div><dt>Answered</dt><dd id="answered-count">0</dd></div>
+            <div><dt>Marked for another look</dt><dd id="missed-count">0</dd></div>
+          </dl>
+          <p class="queue-explainer">Missed cards return after two other prompts. Previous misses also get extra turns next session.</p>
+        </aside>
+
+        <section class="study-panel" aria-label="Flashcard review">
+          <div class="panel-heading">
+            <span class="face-side" id="face-side">Prompt</span>
+            <span class="panel-identity" id="card-identity">Preparing demo…</span>
+          </div>
+          <div class="face-mount" id="face-mount" aria-label="Current card face"></div>
+          <div class="answer-source" id="answer-source" hidden></div>
+          <div class="decision-bar" id="decision-bar">
+            <p class="decision-hint" id="decision-hint">Take a moment before revealing.</p>
+            <button class="reveal-button" id="reveal-button" type="button" disabled>Reveal answer <span class="button-line" aria-hidden="true"></span></button>
+            <div class="grade-controls" id="grade-controls" hidden>
+              <button class="grade-button grade-again" id="again-button" type="button">Review again</button>
+              <button class="grade-button grade-correct" id="correct-button" type="button">Got it right</button>
+            </div>
+            <button class="reveal-button" id="restart-button" type="button" hidden>Review stack again <span class="button-line" aria-hidden="true"></span></button>
+          </div>
+        </section>
+      </div>
+      <p class="keyboard-help">Keyboard: <kbd>Space</kbd> reveal · <kbd>←</kbd> review again · <kbd>→</kbd> got it right</p>
+      <p class="screen-reader-status" id="announcement" role="status" aria-live="polite"></p>
+    </main>
+    <footer class="footer"><span>goodvibes.flashcards</span><span>Private files stay in this tab. Only review counts are saved locally.</span></footer>
+  </div>
+</body>
+</html>

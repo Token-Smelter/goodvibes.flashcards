@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Token-Smelter/goodvibes.flashcards/blob/main/schemas/stack-v1.schema.json",
+  "title": "goodvibes.flashcards stack v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["format", "id", "title", "cards"],
+  "properties": {
+    "format": { "const": "goodvibes.flashcards/stack-v1" },
+    "id": { "$ref": "#/$defs/id" },
+    "title": { "type": "string", "minLength": 1, "maxLength": 120 },
+    "cards": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 5000,
+      "items": { "$ref": "#/$defs/card" }
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{1,79}$"
+    },
+    "face": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["html"],
+      "properties": {
+        "html": { "type": "string", "minLength": 1, "maxLength": 500000 }
+      }
+    },
+    "card": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "front", "back"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "front": { "$ref": "#/$defs/face" },
+        "back": { "$ref": "#/$defs/face" },
+        "tags": {
+          "type": "array",
+          "maxItems": 20,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/id" }
+        },
+        "source": { "type": "string", "minLength": 1, "maxLength": 500 }
+      }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+node_modules/
+.impeccable/decision.json
+.impeccable/questions/
+.impeccable/mocks/
+.impeccable/review/
+.DS_Store

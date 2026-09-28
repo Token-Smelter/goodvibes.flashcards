@@ -1,0 +1,31 @@
+{
+  "format": "goodvibes.flashcards/stack-v1",
+  "id": "demo.symbols",
+  "title": "Symbol literacy · demo",
+  "cards": [
+    {
+      "id": "quadratic-curve",
+      "tags": ["math", "graphs"],
+      "front": {"html": "<p>What would the curve of this equation look like?</p><math display='block' aria-label='y equals x squared'><mi>y</mi><mo>=</mo><msup><mi>x</mi><mn>2</mn></msup></math>"},
+      "back": {"html": "<p>An upward-opening parabola with its vertex at the origin. The output is never negative.</p><svg viewBox='0 0 320 180' role='img' aria-label='An upward-opening parabola touching the x-axis at the origin'><line x1='20' y1='145' x2='300' y2='145' stroke='currentColor' opacity='.45'/><line x1='160' y1='10' x2='160' y2='170' stroke='currentColor' opacity='.45'/><path d='M60 20 Q160 270 260 20' fill='none' stroke='#087e87' stroke-width='4'/><circle cx='160' cy='145' r='4' fill='#087e87'/></svg>"}
+    },
+    {
+      "id": "conditional-false",
+      "tags": ["logic", "notation"],
+      "front": {"html": "<p>In classical logic, when is this implication false?</p><p class='symbol'>P → Q</p>"},
+      "back": {"html": "<p>Only when <strong>P is true</strong> and <strong>Q is false</strong>.</p><table><caption>Truth values for implication</caption><thead><tr><th scope='col'>P</th><th scope='col'>Q</th><th scope='col'>P → Q</th></tr></thead><tbody><tr><td>T</td><td>T</td><td>T</td></tr><tr><td>T</td><td>F</td><td>F</td></tr><tr><td>F</td><td>T</td><td>T</td></tr><tr><td>F</td><td>F</td><td>T</td></tr></tbody></table>"}
+    },
+    {
+      "id": "map-expression",
+      "tags": ["code", "javascript"],
+      "front": {"html": "<p>What does this expression evaluate to?</p><pre><code>[1, 2, 3].map(n => n * 2)</code></pre>"},
+      "back": {"html": "<pre><code>[2, 4, 6]</code></pre><p><code>map</code> applies the function to each element and returns a new array.</p>"}
+    },
+    {
+      "id": "interactive-truth-table",
+      "tags": ["logic", "interactive"],
+      "front": {"html": "<p>Which pair of truth values is the counterexample to <strong>P → Q</strong>?</p>"},
+      "back": {"html": "<p><strong>P = true, Q = false.</strong> The button below runs entirely inside this card face.</p><button id='try-case' type='button'>Try that case</button><output id='result' aria-live='polite'></output><script>document.getElementById('try-case').addEventListener('click', () => { document.getElementById('result').textContent = 'true → false is false'; });</script>"}
+    }
+  ]
+}

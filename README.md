@@ -4,7 +4,7 @@ A static, local-first flashcard player for rich, agent-authored stacks. Import a
 
 ```mermaid
 flowchart LR
-  Agent["Agent edits private stack"] -->|v1 JSON file| Import["Browser file import"]
+  Agent["Agent edits private stack"] -->|v1 or v2 JSON file| Import["Browser file import"]
   Demo["Bundled public demo"] --> Player["Static player on S3 / CloudFront"]
   Import --> Player
   Player -->|isolated HTML face| Frame["Sandboxed frame"]
@@ -26,16 +26,17 @@ Use **Import stack** to open a local JSON file, including one from [the private 
 
 ## Stack format
 
-The [v1 JSON Schema](./schemas/stack-v1.schema.json) and the [player validator](./site/lib/stack.js) define the format. The version string is mandatory; new formats get a new version rather than changing v1 silently. A minimal stack:
+The [v2 JSON Schema](./schemas/stack-v2.schema.json) and the [player validator](./site/lib/stack.js) define the current authoring format. The earlier [v1 schema](./schemas/stack-v1.schema.json) remains supported for existing stacks; v1 files have no `domains` field and show as **Unsorted**. New metadata requires a new format version rather than silently changing v1. A minimal v2 stack:
 
 ```json
 {
-  "format": "goodvibes.flashcards/stack-v1",
+  "format": "goodvibes.flashcards/stack-v2",
   "id": "math.foundations",
   "title": "Foundations",
   "cards": [
     {
       "id": "parabola-shape",
+      "domains": [["Mathematics", "Functions", "Graphs"]],
       "tags": ["math", "graphs"],
       "front": { "html": "<p>What is the shape of this graph?</p><math><mi>y</mi><mo>=</mo><msup><mi>x</mi><mn>2</mn></msup></math>" },
       "back": { "html": "<p>An upward-opening parabola with a vertex at (0, 0).</p>" },
@@ -45,7 +46,7 @@ The [v1 JSON Schema](./schemas/stack-v1.schema.json) and the [player validator](
 }
 ```
 
-`id` is a lowercase 2–80 character stable identifier (letter or digit first; dots, underscores, and hyphens allowed). Keep the stack ID and each card ID when editing: stored progress is keyed by both. Do not reuse an ID for a different question. `tags` and `source` are optional; unknown fields are rejected so agents do not accidentally invent incompatible types. Card faces are HTML fragments, not Markdown. They may contain HTML, MathML, SVG, `<style>`, inline scripts, and self-contained media such as `<img src="data:image/png;base64,...">`; use semantic descriptions for non-text media. See [the demo](./site/demo.json) for curve, logic, code, and interactive examples.
+`id` is a lowercase 2–80 character stable identifier (letter or digit first; dots, underscores, and hyphens allowed). Keep the stack ID and each card ID when editing or migrating v1 to v2: stored progress is keyed by both. Do not reuse an ID for a different question. In v2, `domains` is required on every card: an array of 1–8 paths, each 1–4 readable labels. `[["Mathematics", "Exponents"], ["Machine Learning", "Softmax"]]` puts one card in both places. Keep labels and capitalization consistent across a stack. Parent areas include all descendants; selecting several paths gives their union without duplicating cards. No checked areas means the full stack. Flat `tags` remain optional keywords, not a hierarchy. `source` is an optional citation. Unknown fields are rejected so agents do not accidentally invent incompatible types. Card faces are HTML fragments, not Markdown. They may contain HTML, MathML, SVG, `<style>`, inline scripts, and self-contained media such as `<img src="data:image/png;base64,...">`; use semantic descriptions for non-text media. See [the demo](./site/demo.json) for curve, logic, code, and interactive examples.
 
 Validate before importing or submitting a stack:
 
@@ -53,11 +54,11 @@ Validate before importing or submitting a stack:
 node scripts/validate-stack.mjs /path/to/stack.json
 ```
 
-The validator checks structure, lengths, IDs, duplicate card IDs, tags, and version. It does **not** verify that an answer is true or that an HTML fragment is safe. Each JSON file is limited to 10 MiB and 5000 cards.
+The validator checks structure, domain paths, lengths, IDs, duplicate card IDs, tags, and version. It does **not** verify that an answer is true or that an HTML fragment is safe. Each JSON file is limited to 10 MiB and 5000 cards.
 
 ## Review behavior
 
-A session starts with each card once. A prior excess of incorrect over correct grades adds up to two later review slots for that card. An incorrect grade inserts the card again after up to two other pending cards; a correct grade completes that occurrence. This is a deliberately small revisit rule, **not** Anki/FSRS or a calendar-based spaced-repetition claim. On another visit, import the stack again and the stored counts still influence its queue. There is no account, sync, or due-date scheduler.
+Selecting study areas starts a new session limited to cards in those domains or subareas; it keeps previously recorded grades for every card, including cards outside the selection. A session starts with each selected card once. A prior excess of incorrect over correct grades adds up to two later review slots for that card. An incorrect grade inserts the card again after up to two other pending cards; a correct grade completes that occurrence. This is a deliberately small revisit rule, **not** Anki/FSRS or a calendar-based spaced-repetition claim. On another visit, import the stack again and the stored counts still influence its queue. There is no account, sync, or due-date scheduler.
 
 ## Code in card faces
 
@@ -78,6 +79,6 @@ There is no deployment target, bucket, or distribution configured in this repo; 
 
 ## Prior art and boundaries
 
-[Anki's notes, fields, and card templates](https://docs.ankiweb.net/getting-started.html#notes--fields) show how one fact can yield multiple review directions, while [its scheduling](https://docs.ankiweb.net/deck-options.html#fsrs) is substantially richer. v1 intentionally starts with independent front/back cards and a simple incorrect-first queue; derived cards, cloze, deck nesting, sync, and a real scheduler can be added only when needed.
+[Anki's notes, fields, and card templates](https://docs.ankiweb.net/getting-started.html#notes--fields) show how one fact can yield multiple review directions, while [its scheduling](https://docs.ankiweb.net/deck-options.html#fsrs) is substantially richer. The player uses independent front/back cards and a simple incorrect-first queue; v2 adds hierarchical study areas without introducing generated cards or a calendar scheduler. Derived cards, cloze, sync, and a real scheduler can be added only when needed.
 
 The [Sourcerer Project Card](./.sourcerer/project.md) advertises platform work and format ownership. The private stack repo advertises `card-authoring`. Project Cards require separate registration in Sourcerer before routing can use them.

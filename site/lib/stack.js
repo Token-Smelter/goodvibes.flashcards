@@ -1,4 +1,5 @@
 export const FORMAT = "goodvibes.flashcards/stack-v1";
+export const FORMAT_V2 = "goodvibes.flashcards/stack-v2";
 export const MAX_STACK_BYTES = 10 * 1024 * 1024;
 
 const ID = /^[a-z0-9][a-z0-9._-]{1,79}$/;
@@ -38,7 +39,8 @@ export function validateStack(stack) {
   const errors = [];
   if (!object(stack)) return ["stack: expected an object"];
   keys(stack, ["format", "id", "title", "cards"], "stack", errors);
-  if (stack.format !== FORMAT) errors.push(`stack.format: expected ${FORMAT}`);
+  const v2 = stack.format === FORMAT_V2;
+  if (stack.format !== FORMAT && !v2) errors.push(`stack.format: expected ${FORMAT} or ${FORMAT_V2}`);
   id(stack.id, "stack.id", errors);
   text(stack.title, "stack.title", 120, errors);
 
@@ -54,12 +56,35 @@ export function validateStack(stack) {
       errors.push(`${path}: expected a card object`);
       return;
     }
-    keys(card, ["id", "front", "back", "tags", "source"], path, errors);
+    keys(card, v2 ? ["id", "front", "back", "domains", "tags", "source"] : ["id", "front", "back", "tags", "source"], path, errors);
     id(card.id, `${path}.id`, errors);
     if (seen.has(card.id)) errors.push(`${path}.id: duplicate card ID ${String(card.id)}`);
     seen.add(card.id);
     face(card.front, `${path}.front`, errors);
     face(card.back, `${path}.back`, errors);
+
+    if (v2) {
+      if (!Array.isArray(card.domains) || card.domains.length < 1 || card.domains.length > 8) {
+        errors.push(`${path}.domains: expected 1–8 domain paths`);
+      } else {
+        const paths = new Set();
+        card.domains.forEach((domain, domainIndex) => {
+          const location = `${path}.domains[${domainIndex}]`;
+          if (!Array.isArray(domain) || domain.length < 1 || domain.length > 4) {
+            errors.push(`${location}: expected 1–4 path segments`);
+            return;
+          }
+          domain.forEach((segment, segmentIndex) => {
+            if (typeof segment !== "string" || !segment.trim() || segment !== segment.trim() || segment.length > 60 || segment.includes("/") || /[\x00-\x1f]/.test(segment)) {
+              errors.push(`${location}[${segmentIndex}]: expected a 1–60 character label without slashes or surrounding whitespace`);
+            }
+          });
+          const key = JSON.stringify(domain);
+          if (paths.has(key)) errors.push(`${location}: duplicate domain path`);
+          paths.add(key);
+        });
+      }
+    }
 
     if (card.tags !== undefined) {
       if (!Array.isArray(card.tags) || card.tags.length > 20) {

@@ -1,6 +1,7 @@
 import { MAX_STACK_BYTES, parseStack } from "./lib/stack.js";
 import { createQueue, emptyProgress, readProgress, recordGrade, requeueIncorrect, saveProgress } from "./lib/review.js";
 import { showFace } from "./lib/face.js";
+import { domainPaths, selectCards } from "./lib/domains.js";
 
 const $ = (id) => document.getElementById(id);
 const ui = {
@@ -9,7 +10,8 @@ const ui = {
   identity: $("card-identity"), pending: $("pending-count"), answered: $("answered-count"),
   missed: $("missed-count"), source: $("answer-source"), hint: $("decision-hint"),
   reveal: $("reveal-button"), grades: $("grade-controls"), again: $("again-button"),
-  correct: $("correct-button"), restart: $("restart-button"), announce: $("announcement")
+  correct: $("correct-button"), restart: $("restart-button"), announce: $("announcement"),
+  areaFilter: $("area-filter"), areaOptions: $("area-options"), areaSummary: $("area-summary"), areaClear: $("area-clear")
 };
 
 let storage;
@@ -23,6 +25,7 @@ const state = {
   stack: null,
   cards: new Map(),
   progress: emptyProgress(),
+  selectedPaths: [],
   queue: [],
   current: null,
   revealed: false,
@@ -54,7 +57,7 @@ function renderSource(source) {
       link.href = url.href;
       link.target = "_blank";
       link.rel = "noopener noreferrer";
-      link.textContent = source;
+      link.textContent = `Open reference (${url.hostname})`;
       ui.source.append(link);
       return;
     }
@@ -62,7 +65,39 @@ function renderSource(source) {
   ui.source.append(source);
 }
 
-function nextCard() {
+function applyAreas() {
+  state.selectedPaths = [...ui.areaOptions.querySelectorAll("input:checked")].map((input) => JSON.parse(input.value));
+  const count = selectCards(state.stack.cards, state.selectedPaths).length;
+  ui.areaSummary.textContent = state.selectedPaths.length ? `${state.selectedPaths.length} selected · ${count} cards` : `All ${count} cards`;
+  ui.description.textContent = `${count} of ${state.stack.cards.length} cards · recall first, then check your answer.`;
+  ui.areaClear.disabled = state.selectedPaths.length === 0;
+  startSession(false);
+}
+
+function renderAreas() {
+  const paths = domainPaths(state.stack.cards);
+  ui.areaFilter.hidden = paths.length <= 1;
+  ui.areaFilter.open = false;
+  const options = document.createDocumentFragment();
+  for (const path of paths) {
+    const label = document.createElement("label");
+    label.className = "area-choice";
+    label.style.setProperty("--depth", String(path.length - 1));
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.name = "area";
+    input.value = JSON.stringify(path);
+    input.setAttribute("aria-label", path.join(" / "));
+    const text = document.createElement("span");
+    text.textContent = path[path.length - 1];
+    label.append(input, text);
+    options.append(label);
+  }
+  ui.areaOptions.replaceChildren(options);
+  applyAreas();
+}
+
+function nextCard(focusReview = true) {
   const id = state.queue.shift();
   state.current = id ? state.cards.get(id) : null;
   state.revealed = false;
@@ -89,19 +124,19 @@ function nextCard() {
   }
 
   ui.side.textContent = "Prompt";
-  ui.identity.textContent = `Turn ${state.answered + 1} · ${state.current.tags?.join(" / ") || "general"}`;
+  ui.identity.textContent = `Turn ${state.answered + 1} · ${state.current.domains?.[0]?.join(" / ") || state.current.tags?.join(" / ") || "general"}`;
   ui.hint.textContent = "Take a moment before revealing.";
   showFace(ui.mount, state.current.front.html, "front");
   ui.announce.textContent = `Prompt ${state.answered + 1}. ${state.queue.length + 1} turns remaining.`;
-  ui.reveal.focus();
+  if (focusReview) ui.reveal.focus();
 }
 
-function startSession() {
+function startSession(focusReview = true) {
   if (!state.stack) return;
-  state.queue = createQueue(state.stack, state.progress);
+  state.queue = createQueue({ cards: selectCards(state.stack.cards, state.selectedPaths) }, state.progress);
   state.answered = 0;
   state.missed = 0;
-  nextCard();
+  nextCard(focusReview);
 }
 
 function loadStack(stack, label) {
@@ -109,10 +144,9 @@ function loadStack(stack, label) {
   state.cards = new Map(stack.cards.map((card) => [card.id, card]));
   state.progress = readProgress(stack.id, storage);
   ui.title.textContent = stack.title;
-  ui.description.textContent = `${stack.cards.length} cards · recall first, then check your answer.`;
   ui.origin.textContent = label;
   notice("");
-  startSession();
+  renderAreas();
 }
 
 function reveal() {
@@ -124,7 +158,7 @@ function reveal() {
   renderSource(state.current.source);
   ui.reveal.hidden = true;
   ui.grades.hidden = false;
-  ui.hint.textContent = "How did your answer compare?";
+  ui.hint.textContent = "Read the full answer in the pane; scroll inside it if needed.";
   ui.announce.textContent = "Answer revealed. Mark whether you got it right.";
   ui.again.focus();
 }
@@ -150,7 +184,7 @@ async function importFile() {
     if (file.size > MAX_STACK_BYTES) throw new Error("Stack exceeds the 10 MiB import limit.");
     loadStack(parseStack(await file.text()), `Imported · ${file.name}`);
   } catch (error) {
-    notice(`Could not import ${file.name}: ${error.message}\nCheck the v1 stack format, then try again.`);
+    notice(`Could not import ${file.name}: ${error.message}\nCheck the stack format, then try again.`);
   } finally {
     ui.file.value = "";
   }
@@ -161,10 +195,15 @@ ui.file.addEventListener("change", importFile);
 ui.reveal.addEventListener("click", reveal);
 ui.again.addEventListener("click", () => grade(false));
 ui.correct.addEventListener("click", () => grade(true));
-ui.restart.addEventListener("click", startSession);
+ui.restart.addEventListener("click", () => startSession());
+ui.areaOptions.addEventListener("change", applyAreas);
+ui.areaClear.addEventListener("click", () => {
+  ui.areaOptions.querySelectorAll("input:checked").forEach((input) => { input.checked = false; });
+  applyAreas();
+});
 
 document.addEventListener("keydown", (event) => {
-  if (event.altKey || event.ctrlKey || event.metaKey || event.target.closest("input, textarea, select, [contenteditable='true']")) return;
+  if (event.altKey || event.ctrlKey || event.metaKey || event.target.closest("input, textarea, select, [contenteditable='true'], .area-filter")) return;
   if ((event.code === "Space" || event.key === " ") && !event.target.closest("button, a") && !state.revealed && state.current) {
     event.preventDefault();
     reveal();

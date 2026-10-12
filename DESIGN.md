@@ -25,12 +25,12 @@ The page uses cool daylight rather than a dark coding theme: a learner may study
 
 ## Composition
 
-At desktop widths, the review rail is narrow and dark while the canvas owns the remaining horizontal space. At phone widths the rail becomes a readable status strip above the same canvas. The face frame scrolls internally because its content is sandboxed and its height cannot be read by the parent. The same status hierarchy survives long code, SVG, MathML, and short text prompts.
+At desktop widths, the review rail is narrow and dark while the canvas owns the remaining horizontal space. A collapsed Study areas strip between the title and workspace expands into a text-led hierarchy of selectable paths; it stays in the existing light-table language rather than becoming a separate dashboard. At phone widths the rail becomes a readable status strip above the same canvas. The face frame scrolls internally because its content is sandboxed and its height cannot be read by the parent. The same status hierarchy survives long code, SVG, MathML, and short text prompts.
 
 The first action is always **Reveal answer**. Only after revelation do **Review again** and **Got it right** appear. Counts use tabular numerals; no progress ring or inferred mastery claim. Imported titles and citations are rendered as text, never as parent-page HTML.
 
 ## States and boundaries
 
-Loading, invalid import, inaccessible storage, prompt, answer, and session completion have explicit language. Keyboard focus is visible; reduced-motion users get an effectively static transition. The rich face lives in an opaque-origin `sandbox="allow-scripts"` iframe with an in-frame resource CSP. Parent styling never assumes a domain-specific card shape; author CSS may customize the frame without changing app chrome. Security limitations and author guidance live in `README.md`.
+Loading, invalid import, inaccessible storage, area filtering, prompt, answer, and session completion have explicit language. Changing the selection starts a new queue but preserves saved counts by card ID. Keyboard focus is visible; reduced-motion users get an effectively static transition. The rich face lives in an opaque-origin `sandbox="allow-scripts"` iframe with an in-frame resource CSP. Parent styling never assumes a domain-specific card shape; author CSS may customize the frame without changing app chrome. Security limitations and author guidance live in `README.md`.
 
 The direction was selected as the unconfirmed default when the visual-choice page received no answer; its durable surface contract is in `.impeccable/surfaces/site-index-html.md`. The UI may be retuned without changing the versioned stack format.

@@ -30,6 +30,16 @@
       </div>
 
       <p class="notice" id="notice" role="alert" hidden></p>
+      <details class="area-filter" id="area-filter" hidden>
+        <summary>Study areas <span class="area-summary" id="area-summary">All areas</span></summary>
+        <div class="area-filter-content">
+          <fieldset class="area-list" id="area-list"><legend>Include areas and subareas</legend><div id="area-options"></div></fieldset>
+          <div class="area-filter-foot">
+            <p>Select one or more areas. A parent includes its subareas; changing areas starts a new session.</p>
+            <button id="area-clear" type="button">All areas</button>
+          </div>
+        </div>
+      </details>
       <div class="workspace" id="workspace">
         <aside class="queue-panel" aria-label="Session progress">
           <h2>Review session</h2>

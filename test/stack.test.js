@@ -27,8 +27,41 @@ test("validateStack_unknownField_rejectsUnversionedExtension", () => {
 
 test("parseStack_wrongFormat_rejectsUnsupportedVersion", () => {
   const stack = sample();
-  stack.format = "goodvibes.flashcards/stack-v2";
+  stack.format = "goodvibes.flashcards/stack-v3";
   assert.throws(() => parseStack(JSON.stringify(stack)), /stack.format/);
+});
+
+test("parseStack_v2DomainPaths_acceptsHierarchy", () => {
+  const stack = sample();
+  stack.format = "goodvibes.flashcards/stack-v2";
+  stack.cards[0].domains = [["Mathematics", "Exponents"], ["Machine Learning", "Softmax"]];
+  assert.equal(parseStack(JSON.stringify(stack)).cards[0].domains.length, 2);
+});
+
+test("validateStack_v2MissingDomain_rejectsCard", () => {
+  const stack = sample();
+  stack.format = "goodvibes.flashcards/stack-v2";
+  assert.match(validateStack(stack).join("\n"), /domains/);
+});
+
+test("validateStack_v1DomainExtension_rejectsVersionDrift", () => {
+  const stack = sample();
+  stack.cards[0].domains = [["Mathematics"]];
+  assert.match(validateStack(stack).join("\n"), /unknown field/);
+});
+
+test("validateStack_duplicateDomainPath_rejectsAmbiguousMembership", () => {
+  const stack = sample();
+  stack.format = "goodvibes.flashcards/stack-v2";
+  stack.cards[0].domains = [["Mathematics"], ["Mathematics"]];
+  assert.match(validateStack(stack).join("\n"), /duplicate domain path/);
+});
+
+test("validateStack_emptyDomainSegment_rejectsBrokenHierarchy", () => {
+  const stack = sample();
+  stack.format = "goodvibes.flashcards/stack-v2";
+  stack.cards[0].domains = [["Machine Learning", "  "]];
+  assert.match(validateStack(stack).join("\n"), /character label/);
 });
 
 test("validateStack_blankAnswer_rejectsCard", () => {

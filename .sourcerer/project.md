@@ -27,8 +27,8 @@ lineage:
 grounding:
   - description: Versioned format and review behavior
     path: README.md
-  - description: JSON Schema for v1 stacks
-    path: schemas/stack-v1.schema.json
+  - description: JSON Schema for current v2 stacks
+    path: schemas/stack-v2.schema.json
 
 agent_source:
   kind: registered_checkout
@@ -50,8 +50,8 @@ capabilities:
   - type: stack-format
     version: "1.0"
     description: >-
-      Own the public goodvibes.flashcards/stack-v1 schema, parser, examples,
-      and agent-facing format documentation. New personal cards belong in the
+      Own the public goodvibes.flashcards stack schemas, hierarchical domains,
+      parser, examples, and agent-facing format documentation. New personal cards belong in the
       private flashcard-stack project instead.
     domains:
       - flashcards
